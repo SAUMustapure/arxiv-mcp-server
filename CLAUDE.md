@@ -50,12 +50,12 @@ The process waits for MCP messages on stdin. It is not an interactive CLI.
 
 ## Tool groups
 
-The server registers 14 tools:
+The server registers 16 tools:
 
 - Discovery: `search_papers`, `get_abstract`
 - Full text: `download_paper`, `list_papers`, `read_paper`
 - Original source: `get_paper_latex`, `list_paper_latex_sections`, `get_paper_latex_section`
-- Graphs and monitoring: `citation_graph`, `watch_topic`, `check_alerts`
+- Graphs and monitoring: `citation_graph`, `watch_topic`, `list_watches`, `check_alerts`, `unwatch_topic`
 - Citation export: `export_citations`
 - Optional local embeddings: `semantic_search`, `reindex`
 
@@ -83,6 +83,7 @@ Keep tool schemas, package exports, server registration, dispatch, tests, and RE
 - `PORT`
 - `ALLOWED_HOSTS`
 - `ALLOWED_ORIGINS`
+- `SEMANTIC_SCHOLAR_API_KEY`
 
 Paper storage is selected with the `--storage-path` command-line option and defaults to `~/.arxiv-mcp-server/papers`.
 
