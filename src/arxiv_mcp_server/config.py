@@ -57,6 +57,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
     ALLOWED_HOSTS: str = ""
     ALLOWED_ORIGINS: str = ""
+    EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
     model_config = SettingsConfigDict(extra="allow")
 
     @property

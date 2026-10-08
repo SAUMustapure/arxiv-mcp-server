@@ -24,10 +24,11 @@ SentenceTransformer: Any = None
 logger = logging.getLogger("arxiv-mcp-server")
 settings = Settings()
 
-EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+EMBEDDING_MODEL_NAME = settings.EMBEDDING_MODEL
 INDEX_DB_NAME = "semantic_index.db"
 
 _model: Optional[Any] = None
+_model_embedding_dim: Optional[int] = None
 
 
 @dataclass
@@ -131,7 +132,8 @@ def _connect() -> sqlite3.Connection:
     """Open SQLite connection and ensure schema exists."""
     conn = sqlite3.connect(_db_path())
     conn.row_factory = sqlite3.Row
-    conn.execute("""
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS semantic_index (
             paper_id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
@@ -143,9 +145,18 @@ def _connect() -> sqlite3.Connection:
             embedding_dim INTEGER NOT NULL,
             updated_at TEXT NOT NULL
         )
-        """)
+        """
+    )
     conn.commit()
     return conn
+
+
+def _get_embedding_dimension() -> int:
+    """Return the current model embedding dimension and cache it."""
+    global _model_embedding_dim
+    if _model_embedding_dim is None:
+        _model_embedding_dim = _get_model().get_sentence_embedding_dimension()
+    return _model_embedding_dim
 
 
 def _get_model() -> Any:
@@ -262,7 +273,9 @@ def index_paper_from_result(paper: Any) -> bool:
         return False
 
 
-def _load_vectors(exclude_paper_id: Optional[str] = None) -> List[Dict[str, Any]]:
+def _load_vectors(
+    exclude_paper_id: Optional[str] = None, expected_dim: Optional[int] = None
+) -> List[Dict[str, Any]]:
     """Load all vectors (optionally excluding one paper)."""
     with _connect() as conn:
         if exclude_paper_id:
@@ -274,9 +287,17 @@ def _load_vectors(exclude_paper_id: Optional[str] = None) -> List[Dict[str, Any]
 
     vectors: List[Dict[str, Any]] = []
     for row in rows:
-        vector = np.frombuffer(
-            row["embedding"], dtype=np.float32, count=row["embedding_dim"]
-        )
+        stored_dim = int(row["embedding_dim"])
+        if expected_dim is not None and stored_dim != expected_dim:
+            logger.warning(
+                "Skipping paper %s: stored embedding dim %s does not match current model dim %s. Reindex required.",
+                row["paper_id"],
+                stored_dim,
+                expected_dim,
+            )
+            continue
+
+        vector = np.frombuffer(row["embedding"], dtype=np.float32, count=stored_dim)
         vectors.append(
             {
                 "paper_id": row["paper_id"],
@@ -323,6 +344,8 @@ def _rank_by_similarity(
 
 def _get_indexed_paper_vector(paper_id: str) -> Optional[Any]:
     """Fetch an indexed vector for a specific paper."""
+    current_dim = _get_embedding_dimension()
+
     with _connect() as conn:
         row = conn.execute(
             "SELECT embedding, embedding_dim FROM semantic_index WHERE paper_id = ?",
@@ -332,7 +355,14 @@ def _get_indexed_paper_vector(paper_id: str) -> Optional[Any]:
     if row is None:
         return None
 
-    return np.frombuffer(row["embedding"], dtype=np.float32, count=row["embedding_dim"])
+    stored_dim = int(row["embedding_dim"])
+    if stored_dim != current_dim:
+        raise ValueError(
+            f"Paper {paper_id} was indexed with embedding dimension {stored_dim}, "
+            f"but the current model expects {current_dim}. Run reindex."
+        )
+
+    return np.frombuffer(row["embedding"], dtype=np.float32, count=stored_dim)
 
 
 def rebuild_index(clear_existing: bool = True) -> Dict[str, Any]:
@@ -401,7 +431,11 @@ async def handle_semantic_search(arguments: Dict[str, Any]) -> List[types.TextCo
             ]
 
         if paper_id:
-            query_vector = _get_indexed_paper_vector(paper_id)
+            try:
+                query_vector = _get_indexed_paper_vector(paper_id)
+            except ValueError as exc:
+                return [types.TextContent(type="text", text=f"Error: {exc}")]
+
             if query_vector is None:
                 logger.info(
                     "Paper %s not indexed yet, attempting to fetch and index", paper_id
@@ -413,14 +447,19 @@ async def handle_semantic_search(arguments: Dict[str, Any]) -> List[types.TextCo
                             text=f"Error: Could not index source paper {paper_id}.",
                         )
                     ]
-                query_vector = _get_indexed_paper_vector(paper_id)
+                try:
+                    query_vector = _get_indexed_paper_vector(paper_id)
+                except ValueError as exc:
+                    return [types.TextContent(type="text", text=f"Error: {exc}")]
 
-            candidates = _load_vectors(exclude_paper_id=paper_id)
+            candidates = _load_vectors(
+                exclude_paper_id=paper_id, expected_dim=len(query_vector)
+            )
             mode = "similar_to_paper"
             query_payload = paper_id
         else:
             query_vector = _embed_text(query)
-            candidates = _load_vectors()
+            candidates = _load_vectors(expected_dim=len(query_vector))
             mode = "semantic_query"
             query_payload = query
 
