@@ -24,7 +24,6 @@ SentenceTransformer: Any = None
 logger = logging.getLogger("arxiv-mcp-server")
 settings = Settings()
 
-EMBEDDING_MODEL_NAME = settings.EMBEDDING_MODEL
 INDEX_DB_NAME = "semantic_index.db"
 
 _model: Optional[Any] = None
@@ -163,8 +162,8 @@ def _get_model() -> Any:
     """Load the sentence-transformers model lazily."""
     global _model
     if _model is None:
-        logger.info("Loading semantic embedding model %s", EMBEDDING_MODEL_NAME)
-        _model = SentenceTransformer(EMBEDDING_MODEL_NAME)
+        logger.info("Loading semantic embedding model %s", settings.EMBEDDING_MODEL)
+        _model = SentenceTransformer(settings.EMBEDDING_MODEL)
     return _model
 
 
