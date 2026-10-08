@@ -10,9 +10,9 @@
 [![Python](https://img.shields.io/pypi/pyversions/arxiv-mcp-server.svg)](https://pypi.org/project/arxiv-mcp-server/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-[![Install in VS Code](https://img.shields.io/badge/Install_in-VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=arxiv-mcp-server&config=%7B%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22arxiv-mcp-server%22%5D%7D)
-[![Install in VS Code Insiders](https://img.shields.io/badge/Install_in-VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=arxiv-mcp-server&config=%7B%22type%22%3A%22stdio%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22arxiv-mcp-server%22%5D%7D&quality=insiders)
-[![Add to Kiro](https://kiro.dev/images/add-to-kiro.svg)](https://kiro.dev/launch/mcp/add?name=arxiv-mcp-server&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22arxiv-mcp-server%22%5D%2C%22disabled%22%3Afalse%2C%22autoApprove%22%3A%5B%5D%7D)
+[![Install in VS Code](https://img.shields.io/badge/Install_in-VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=arxiv-mcp-serve[...]
+[![Install in VS Code Insiders](https://img.shields.io/badge/Install_in-VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/i[...]
+[![Add to Kiro](https://kiro.dev/images/add-to-kiro.svg)](https://kiro.dev/launch/mcp/add?name=arxiv-mcp-server&config=%7B%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22arxiv-mcp-server%22%5D%2C%2[...]
 [![Claude Code](https://img.shields.io/badge/Claude_Code-Install-D97757?style=flat-square&logo=anthropic&logoColor=white)](#claude-code)
 [![OpenAI Codex](https://img.shields.io/badge/OpenAI_Codex-Install-000000?style=flat-square&logo=openai&logoColor=white)](#openai-codex)
 
@@ -22,7 +22,7 @@ It runs locally over stdio by default. Papers and indexes stay on your machine; 
 
 ## Install
 
-The command-based integrations require [uv](https://docs.astral.sh/uv/getting-started/installation/), which provides `uvx`. Choose your client below; no repository clone or Python environment setup is required.
+The command-based integrations require [uv](https://docs.astral.sh/uv/getting-started/installation/), which provides `uvx`. Choose your client below; no repository clone or Python environment setu[...]
 
 ### Claude Code
 
@@ -69,7 +69,7 @@ For the richer Kiro Power integration, open the **Powers** panel, choose **Add C
 https://github.com/blazickjp/arxiv-mcp-server
 ```
 
-The Power installs the MCP connection from `mcp.json` and adds focused arXiv research guidance. Kiro users who prefer manual configuration can place the generic configuration below in `.kiro/settings/mcp.json` for one workspace or `~/.kiro/settings/mcp.json` for all workspaces.
+The Power installs the MCP connection from `mcp.json` and adds focused arXiv research guidance. Kiro users who prefer manual configuration can place the generic configuration below in `.kiro/setti[...]
 
 ### Claude Desktop bundle
 
@@ -78,7 +78,7 @@ macOS users can install a bundled `.mcpb` extension from the [latest GitHub rele
 - Apple Silicon: `arxiv-mcp-server-darwin-arm64-<version>.mcpb`
 - Intel: `arxiv-mcp-server-darwin-x86_64-<version>.mcpb`
 
-Double-click the bundle, drag it into Claude Desktop, or open **Settings → Extensions → Advanced settings → Install Extension…**. The bundle includes the server dependencies and requires CPython 3.11.x.
+Double-click the bundle, drag it into Claude Desktop, or open **Settings → Extensions → Advanced settings → Install Extension…**. The bundle includes the server dependencies and requires C[...]
 
 ### Any MCP client
 
@@ -140,7 +140,7 @@ The repository now packages the same MCP server and research skill for both majo
 | Shared MCP launch | `.mcp.json` for Claude and repository-local clients; `.codex-mcp.json` for Codex plugins | `uvx arxiv-mcp-server` |
 | Shared research workflow | `skills/arxiv-mcp-server/SKILL.md` | Installed with either plugin |
 
-Direct MCP installation is the shortest path. Install the plugin when you also want the research workflow that steers the client toward focused searches, bounded reads, citation traversal, and section-level LaTeX retrieval.
+Direct MCP installation is the shortest path. Install the plugin when you also want the research workflow that steers the client toward focused searches, bounded reads, citation traversal, and se[...]
 
 ## Tools
 
@@ -260,7 +260,9 @@ If the base tool is already installed, reinstall the selected variant:
 uv tool install --force 'arxiv-mcp-server[pdf]'
 ```
 
-The `pdf` extra installs `pymupdf4llm` and `pymupdf-layout` for papers without usable arXiv HTML. The `pro` extra adds local embedding dependencies for `semantic_search` and `reindex`; semantic search only operates on papers already downloaded to the configured storage directory.
+The `pdf` extra installs `pymupdf4llm` and `pymupdf-layout` for papers without usable arXiv HTML. The `pro` extra adds local embedding dependencies for `semantic_search` and `reindex`; semantic s[...]
+
+The semantic search and reindex features require `sentence-transformers` and `numpy`. Set the `EMBEDDING_MODEL` environment variable to select a different model (default: `sentence-transformers/all-MiniLM-L6-v2`). Model names must be valid HuggingFace identifiers. The model is cached in the standard location for your OS (typically `~/.cache/huggingface`).
 
 ## Built-in prompts
 
@@ -298,7 +300,7 @@ Connect clients to:
 }
 ```
 
-The server binds to `127.0.0.1` by default and enables MCP DNS-rebinding protection. If a reverse proxy exposes the server, keep the process on a private interface and provide authentication and network controls upstream. Use `ALLOWED_HOSTS` and `ALLOWED_ORIGINS` for the host and origin values forwarded by the proxy.
+The server binds to `127.0.0.1` by default and enables MCP DNS-rebinding protection. If a reverse proxy exposes the server, keep the process on a private interface and provide authentication and [...]
 
 ## Configuration
 
@@ -312,6 +314,7 @@ The server binds to `127.0.0.1` by default and enables MCP DNS-rebinding protect
 | `PORT` | `8000` | HTTP bind port |
 | `ALLOWED_HOSTS` | empty | Additional accepted HTTP Host values |
 | `ALLOWED_ORIGINS` | empty | Additional accepted HTTP Origin values |
+| `EMBEDDING_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` | HuggingFace model ID for semantic search |
 
 Environment variable names are case-insensitive through Pydantic settings. `--storage-path` is a command-line option rather than an environment setting.
 
@@ -354,7 +357,7 @@ Run the development checkout from an MCP client with:
 }
 ```
 
-Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request, and use [GitHub Issues](https://github.com/blazickjp/arxiv-mcp-server/issues) for reproducible bugs or scoped feature proposals.
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request, and use [GitHub Issues](https://github.com/blazickjp/arxiv-mcp-server/issues) for reproducible bu[...]
 
 ## License
 
